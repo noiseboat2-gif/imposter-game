@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0A1048" id="metaTheme">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Imposter – the picture party game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* ---------- THEME TOKENS ---------- */
+:root{
+  --bg-a:#0A1048; --bg-b:#1B2A9A;
+  --text:#F5F4FF; --muted:#B8BEF5; --line:rgba(255,255,255,.22);
+  --glass:rgba(255,255,255,.11); --glass-line:rgba(255,255,255,.24); --glass-hi:rgba(255,255,255,.30);
+  --glass-shadow:0 8px 28px rgba(4,6,40,.35);
+  --inset:rgba(6,10,60,.38);
+  --blob-o:.6; --b1:#FFC93C; --b2:#FF5A8A; --b3:#3D8BFF;
+  --win:#38D9A0; --lose:#FF6B5E; --accent:#FFC93C;
+  --card-edge:#070C3C;
+  --gold:#FFC93C; --gold-deep:#C48F08;
+  --coral:#FF5A4E; --coral-deep:#B92E25;
+  --paper:#FBFAFF; --ink:#101A63;
+  --doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220' fill='none' stroke='%23ffffff' stroke-opacity='.10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='34' r='10'/%3E%3Cpath d='M96 28l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z'/%3E%3Cpath d='M170 24v20M160 34h20'/%3E%3Cpath d='M22 112q10-14 20 0t20 0 20 0'/%3E%3Crect x='122' y='98' width='32' height='44' rx='6' transform='rotate(14 138 120)'/%3E%3Cpath d='M186 112l14 24h-28z'/%3E%3Cpath d='M40 176l12 12-12 12-12-12z'/%3E%3Ccircle cx='108' cy='186' r='5'/%3E%3Cpath d='M166 176c0-8 6-12 12-12s12 4 12 11c0 8-10 9-12 17M178 199v1'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"]{
+  --bg-a:#E2E8FF; --bg-b:#F0E4FF;
+  --text:#121A66; --muted:#4B54A6; --line:rgba(18,26,102,.2);
+  --glass:rgba(255,255,255,.55); --glass-line:rgba(255,255,255,.9); --glass-hi:#fff;
+  --glass-shadow:0 8px 28px rgba(60,70,170,.18);
+  --inset:rgba(255,255,255,.72);
+  --blob-o:.65; --b1:#FFC93C; --b2:#FF8FB1; --b3:#7CB2FF;
+  --win:#0B8F63; --lose:#D3322A; --accent:#A66B00;
+  --card-edge:#8E97E4;
+  --doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220' fill='none' stroke='%23121a66' stroke-opacity='.09' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='34' r='10'/%3E%3Cpath d='M96 28l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z'/%3E%3Cpath d='M170 24v20M160 34h20'/%3E%3Cpath d='M22 112q10-14 20 0t20 0 20 0'/%3E%3Crect x='122' y='98' width='32' height='44' rx='6' transform='rotate(14 138 120)'/%3E%3Cpath d='M186 112l14 24h-28z'/%3E%3Cpath d='M40 176l12 12-12 12-12-12z'/%3E%3Ccircle cx='108' cy='186' r='5'/%3E%3Cpath d='M166 176c0-8 6-12 12-12s12 4 12 11c0 8-10 9-12 17M178 199v1'/%3E%3C/svg%3E");
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg-a);height:100%}
+body{
+  margin:0;min-height:100%;background:var(--bg-a);color:var(--text);
+  font-family:'Bricolage Grotesque','Trebuchet MS',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:17px;line-height:1.35;overscroll-behavior:none;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+input{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+h1,h2,h3,p,figure{margin:0}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* ---------- BACKGROUND ---------- */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  background:linear-gradient(165deg,var(--bg-a),var(--bg-b));transition:background .3s}
+.blob{position:absolute;border-radius:50%;opacity:var(--blob-o);
+  width:min(120vw,560px);height:min(120vw,560px);
+  background:radial-gradient(closest-side,var(--c),transparent)}
+.blob.b1{--c:var(--b1);top:-14%;left:-34%;animation:drift 26s ease-in-out infinite alternate}
+.blob.b2{--c:var(--b2);bottom:-12%;right:-40%;animation:drift 32s ease-in-out infinite alternate-reverse}
+.blob.b3{--c:var(--b3);top:34%;left:8%;width:min(90vw,420px);height:min(90vw,420px);animation:drift 38s ease-in-out infinite alternate}
+.doodles{position:absolute;inset:0;background-image:var(--doodle);background-size:220px 220px}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(8vw,5vh) scale(1.14)}}
+
+#app{
+  position:relative;z-index:1;
+  min-height:100vh;min-height:100dvh;max-width:480px;margin:0 auto;
+  padding:max(12px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;
+}
+.screen{flex:1;display:flex;flex-direction:column;gap:18px;padding-top:6px}
+.screen.center{align-items:center;text-align:center;justify-content:center;gap:14px}
+.grow{flex:1}
+
+/* ---------- GLASS ---------- */
+.panel,.pill,.theme,.note,.order li,.vote,.btn.quiet,.dock{
+  background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  box-shadow:var(--glass-shadow),inset 0 1px 0 var(--glass-hi);
+}
+.pname,.stepper,.seg,.chip,.switch .track,.t-row .bar-bg{
+  background:var(--inset);border:1px solid var(--glass-line);
+}
+.panel{border-radius:26px;padding:18px}
+.panel h2{margin-bottom:12px}
+.panel .row h2{margin:0}
+
+/* ---------- TOP BAR ---------- */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0 0;min-height:46px}
+.bl{display:flex;gap:8px}
+.pill{border-radius:999px;padding:9px 15px;font-weight:700;font-size:15px}
+.pill:active{transform:scale(.96)}
+
+.theme{position:relative;flex:none;width:80px;height:42px;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.theme .thumb{position:absolute;top:4px;left:4px;width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(160deg,#FFE28A,var(--gold));
+  box-shadow:0 2px 8px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.7);
+  transform:translateX(38px);transition:transform .28s cubic-bezier(.3,1.4,.5,1)}
+:root[data-theme="light"] .theme .thumb{transform:none}
+.theme svg{position:relative;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);transition:color .2s}
+:root[data-theme="light"] .theme .sun,
+:root:not([data-theme="light"]) .theme .moon{color:var(--ink)}
+
+/* ---------- SETUP ---------- */
+h1{font-size:clamp(50px,17vw,74px);font-weight:800;letter-spacing:-.035em;line-height:.95;margin-top:10px}
+.lede{color:var(--muted);font-size:18px;max-width:30ch;margin-top:12px}
+h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.stepper{display:flex;align-items:center;gap:6px;border-radius:999px;padding:4px}
+.stepper button{width:40px;height:40px;border-radius:50%;background:var(--gold);color:var(--ink);font-size:24px;font-weight:800;line-height:1}
+.stepper button:active{transform:scale(.92)}
+.stepper output{min-width:34px;text-align:center;font-weight:800;font-size:20px}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pname{display:flex;align-items:center;gap:8px;border-radius:14px;padding:0 12px;height:50px}
+.pname i{flex:none;width:14px;height:14px;border-radius:50%}
+.pname input{min-width:0;width:100%;background:none;border:0;color:var(--text);font:inherit;font-weight:700;font-size:16px;outline:none}
+.pname input::placeholder{color:var(--muted);font-weight:500}
+.pname:focus-within{box-shadow:0 0 0 2px var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;font-weight:700;font-size:16px;transition:background .15s,color .15s}
+.chip.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px}
+.seg button{padding:12px 8px;border-radius:12px;font-weight:800;font-size:16px;line-height:1.15;transition:background .15s}
+.seg button[aria-checked="true"]{background:var(--gold);color:var(--ink);box-shadow:0 2px 0 var(--gold-deep)}
+.desc{color:var(--muted);font-size:15px;margin:12px 2px 14px}
+.switch{display:flex;align-items:center;gap:14px;font-weight:700;text-align:left;font-size:16px}
+.switch .track{flex:none;width:52px;height:30px;border-radius:999px;position:relative;transition:background .15s}
+.switch .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .18s,background .18s}
+.switch[aria-checked="true"] .track{background:var(--gold);border-color:var(--gold)}
+.switch[aria-checked="true"] .knob{transform:translateX(22px);background:var(--ink)}
+.dock{position:sticky;bottom:max(8px,env(safe-area-inset-bottom));margin-top:auto;border-radius:28px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.foot{color:var(--muted);font-size:14px;text-align:center}
+
+/* ---------- BUTTONS ---------- */
+.btn{width:100%;padding:18px 20px;border-radius:20px;font-weight:800;font-size:20px;letter-spacing:-.01em;transition:transform .08s,box-shadow .08s}
+.btn.primary{background:var(--gold);color:var(--ink);box-shadow:0 6px 0 var(--gold-deep)}
+.btn.primary:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 var(--gold-deep)}
+.btn.quiet{padding:14px 20px;font-size:18px;border-radius:20px}
+.btn:disabled{opacity:.4;box-shadow:none;transform:translateY(4px);cursor:default}
+
+/* ---------- PASS SCREENS ---------- */
+.dots{display:flex;gap:8px;margin-bottom:10px}
+.dots b{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots b.done{background:var(--muted)}
+.dots b.now{background:var(--gold);transform:scale(1.35)}
+.say{color:var(--muted);font-size:20px;font-weight:500}
+.bigname{display:flex;flex-direction:column;align-items:center;gap:16px;font-size:clamp(44px,15vw,68px);font-weight:800;letter-spacing:-.03em;line-height:1;word-break:break-word}
+.bigname i{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 4px var(--glass-line)}
+.small{color:var(--muted);font-size:15px}
+
+/* ---------- THE CARD ---------- */
+.card-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0}
+.card{
+  position:relative;aspect-ratio:5/7;border-radius:28px;
+  width:min(80vw,calc(50vh * .714));width:min(80vw,calc(50dvh * .714));
+  touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer;
+  box-shadow:0 10px 0 var(--card-edge),0 22px 34px rgba(0,0,0,.28);
+}
+.card .back,.card .face{position:absolute;inset:0;border-radius:inherit;border:6px solid var(--gold);overflow:hidden}
+.card .back{background:repeating-linear-gradient(45deg,#2B3CC4 0 14px,#2333B0 14px 28px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.card .back .q{width:96px;height:96px;border-radius:50%;background:var(--gold);color:#101A63;display:grid;place-items:center;font-size:64px;font-weight:800;line-height:1}
+.card .back .t{font-weight:800;font-size:20px;background:#101A68;color:#F5F4FF;padding:6px 14px;border-radius:999px}
+.card .face{display:none;flex-direction:column;background:var(--paper);color:#101A63}
+.card.open .face{display:flex}
+.card.open .back{display:none}
+.card .pic{flex:1;min-height:0;background:#E4E2F5}
+.card .pic img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.card .pic.emoji{display:grid;place-items:center;font-size:clamp(90px,30vw,140px)}
+.card .plate{padding:14px 10px 16px;text-align:center;font-weight:800;letter-spacing:-.02em;font-size:clamp(28px,9vw,38px);line-height:1.05}
+.card .tag{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:var(--coral);color:#fff;font-weight:800;font-size:14px;padding:6px 12px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.card .face.imp{background:var(--coral);color:#fff;align-items:center;justify-content:center;text-align:center;gap:12px;padding:20px}
+.card .face.imp h3{font-size:clamp(30px,10vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.card .face.imp p{font-size:18px;font-weight:500}
+.card .face.imp .clue{font-size:clamp(26px,8vw,32px);font-weight:800;background:#fff;color:var(--coral-deep);padding:6px 16px;border-radius:14px;line-height:1.1}
+.card.small{width:min(52vw,210px)}
+.card.small .plate{font-size:24px;padding:10px 8px 12px}
+.duo{gap:16px;align-items:flex-start}
+.duo .card.small{width:min(40vw,176px)}
+.fig{display:flex;flex-direction:column;align-items:center;gap:20px}
+.fig figcaption{font-weight:700;font-size:15px;color:var(--muted)}
+.hold{text-align:center;color:var(--muted);font-size:16px;margin:2px 0 4px}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* ---------- STARTER ---------- */
+.roul{font-size:clamp(50px,17vw,84px);font-weight:800;letter-spacing:-.035em;line-height:1;min-height:1.1em;text-align:center;word-break:break-word}
+.roul.landed{color:var(--accent);animation:pop .42s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.7)}to{transform:scale(1)}}
+.after{opacity:0;pointer-events:none;transition:opacity .35s;display:flex;flex-direction:column;gap:18px;width:100%}
+.after.show{opacity:1;pointer-events:auto}
+.order{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.order li{display:flex;align-items:center;gap:8px;border-radius:999px;padding:6px 14px 6px 6px;font-weight:700;font-size:16px}
+.order li i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;color:#101A63}
+.prompt{color:var(--muted);max-width:32ch;margin:0 auto}
+
+/* ---------- VOTING ---------- */
+.vote-head{margin-top:10px}
+.vote-head h2{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.vote-head p{color:var(--muted);margin-top:8px}
+.votes{display:flex;flex-direction:column;gap:12px}
+.vote{display:flex;align-items:center;gap:14px;text-align:left;padding:16px 18px;border-radius:20px;font-weight:800;font-size:22px;letter-spacing:-.01em;width:100%}
+.vote i{flex:none;width:20px;height:20px;border-radius:50%}
+.vote.sel{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+
+.tally{display:flex;flex-direction:column;gap:14px}
+.t-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;font-weight:700}
+.t-row .bar-bg{grid-column:1/-1;height:16px;border-radius:8px;overflow:hidden}
+.t-row .bar-fill{height:100%;border-radius:8px;background:var(--muted)}
+.t-row.top .bar-fill{background:var(--gold)}
+.t-row .who{display:flex;align-items:center;gap:10px;font-size:20px}
+.t-row .who i{width:16px;height:16px;border-radius:50%}
+.t-row .n{font-size:22px;font-weight:800}
+
+/* ---------- FINAL ---------- */
+.verdict{font-size:clamp(36px,12vw,52px);font-weight:800;letter-spacing:-.035em;line-height:1}
+.verdict.win{color:var(--win)}
+.verdict.lose{color:var(--lose)}
+.result-sub{color:var(--muted);font-size:18px;margin-top:10px}
+.who-imp{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:var(--text)}
+.who-imp i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.note{border-radius:18px;padding:14px 16px;font-size:16px;color:var(--muted)}
+
+.spin{width:54px;height:54px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--gold);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="doodles"></div>
+</div>
+<div id="app"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ------------------------------------------------------------------
+   DATA  –  [category, Wikipedia article title, display name, fallback emoji]
+   Pictures are pulled live from Wikipedia (no key, no backend).
+------------------------------------------------------------------- */
+const COLORS = ['#FFC93C','#FF6B5E','#38D9A0','#7CD4FF','#FF8FD0','#B79CFF','#FF9F43','#C9F26B'];
+
+const CATS = {
+  animals:  { label:'Animals',         emoji:'🐘', clue:'an animal' },
+  birds:    { label:'Birds',           emoji:'🦜', clue:'a bird' },
+  food:     { label:'Food & drinks',   emoji:'🍕', clue:'food or a drink' },
+  produce:  { label:'Fruit & veg',     emoji:'🥭', clue:'a fruit or vegetable' },
+  things:   { label:'Everyday things', emoji:'🪥', clue:'an everyday object' },
+  vehicles: { label:'Vehicles',        emoji:'🚲', clue:'a vehicle' }
+};
+
+const ITEMS = [
+  // animals
+  ['animals','Elephant','Elephant','🐘'],['animals','Lion','Lion','🦁'],['animals','Tiger','Tiger','🐅'],
+  ['animals','Giraffe','Giraffe','🦒'],['animals','Zebra','Zebra','🦓'],['animals','Monkey','Monkey','🐒'],
+  ['animals','Dog','Dog','🐕'],['animals','Cat','Cat','🐈'],['animals','Cattle','Cow','🐄'],
+  ['animals','Horse','Horse','🐎'],['animals','Goat','Goat','🐐'],['animals','Sheep','Sheep','🐑'],
+  ['animals','Camel','Camel','🐪'],['animals','Rabbit','Rabbit','🐇'],['animals','Squirrel','Squirrel','🐿️'],
+  ['animals','Brown bear','Bear','🐻'],['animals','Kangaroo','Kangaroo','🦘'],['animals','Giant panda','Panda','🐼'],
+  ['animals','Dolphin','Dolphin','🐬'],['animals','Blue whale','Whale','🐋'],['animals','Turtle','Turtle','🐢'],
+  ['animals','Frog','Frog','🐸'],['animals','Snake','Snake','🐍'],['animals','Crocodile','Crocodile','🐊'],
+  ['animals','Butterfly','Butterfly','🦋'],['animals','Honey bee','Bee','🐝'],['animals','Rhinoceros','Rhino','🦏'],
+  ['animals','Hippopotamus','Hippo','🦛'],['animals','Red fox','Fox','🦊'],['animals','Octopus','Octopus','🐙'],
+  ['animals','Crab','Crab','🦀'],['animals','Snail','Snail','🐌'],['animals','Pig','Pig','🐖'],
+  ['animals','Deer','Deer','🦌'],['animals','Gorilla','Gorilla','🦍'],
+  // birds
+  ['birds','Indian peafowl','Peacock','🦚'],['birds','Parrot','Parrot','🦜'],['birds','House crow','Crow','🐦'],
+  ['birds','House sparrow','Sparrow','🐦'],['birds','Owl','Owl','🦉'],['birds','Eagle','Eagle','🦅'],
+  ['birds','Penguin','Penguin','🐧'],['birds','Flamingo','Flamingo','🦩'],['birds','Duck','Duck','🦆'],
+  ['birds','Swan','Swan','🦢'],['birds','Chicken','Chicken','🐔'],['birds','Rock dove','Pigeon','🕊️'],
+  ['birds','Hummingbird','Hummingbird','🐦'],['birds','Common kingfisher','Kingfisher','🐦'],['birds','Ostrich','Ostrich','🐦'],
+  ['birds','Woodpecker','Woodpecker','🐦'],['birds','Toucan','Toucan','🐦'],['birds','Pelican','Pelican','🐦'],
+  ['birds','Gull','Seagull','🐦'],['birds','Turkey (bird)','Turkey','🦃'],['birds','Stork','Stork','🐦'],
+  ['birds','Great hornbill','Hornbill','🐦'],
+  // food & drinks
+  ['food','Pizza','Pizza','🍕'],['food','Hamburger','Burger','🍔'],['food','Dosa','Dosa','🥞'],
+  ['food','Samosa','Samosa','🥟'],['food','Biryani','Biryani','🍛'],['food','Idli','Idli','🍚'],
+  ['food','Jalebi','Jalebi','🍥'],['food','Gulab jamun','Gulab jamun','🍡'],['food','Vada pav','Vada pav','🥔'],
+  ['food','Masala chai','Masala chai','🍵'],['food','French fries','French fries','🍟'],['food','Sandwich','Sandwich','🥪'],
+  ['food','Ice cream','Ice cream','🍦'],['food','Cake','Cake','🎂'],['food','Doughnut','Doughnut','🍩'],
+  ['food','Chocolate chip cookie','Cookie','🍪'],['food','Bread','Bread','🍞'],['food','Popcorn','Popcorn','🍿'],
+  ['food','Chocolate bar','Chocolate','🍫'],['food','Pasta','Pasta','🍝'],['food','Cheese','Cheese','🧀'],
+  ['food','Fried egg','Fried egg','🍳'],['food','Noodle','Noodles','🍜'],['food','Sushi','Sushi','🍣'],
+  ['food','Coffee','Coffee','☕'],['food','Milkshake','Milkshake','🥤'],['food','Pancake','Pancake','🥞'],
+  ['food','Chapati','Chapati','🫓'],['food','Taco','Taco','🌮'],['food','Hot dog','Hot dog','🌭'],
+  // fruit & veg
+  ['produce','Mango','Mango','🥭'],['produce','Banana','Banana','🍌'],['produce','Apple','Apple','🍎'],
+  ['produce','Orange (fruit)','Orange','🍊'],['produce','Grape','Grapes','🍇'],['produce','Watermelon','Watermelon','🍉'],
+  ['produce','Pineapple','Pineapple','🍍'],['produce','Strawberry','Strawberry','🍓'],['produce','Coconut','Coconut','🥥'],
+  ['produce','Papaya','Papaya','🍈'],['produce','Pomegranate','Pomegranate','🍎'],['produce','Guava','Guava','🍐'],
+  ['produce','Lemon','Lemon','🍋'],['produce','Cherry','Cherry','🍒'],['produce','Tomato','Tomato','🍅'],
+  ['produce','Potato','Potato','🥔'],['produce','Onion','Onion','🧅'],['produce','Carrot','Carrot','🥕'],
+  ['produce','Maize','Corn','🌽'],['produce','Chili pepper','Chilli','🌶️'],['produce','Eggplant','Brinjal','🍆'],
+  ['produce','Cucumber','Cucumber','🥒'],['produce','Garlic','Garlic','🧄'],['produce','Pumpkin','Pumpkin','🎃'],
+  ['produce','Broccoli','Broccoli','🥦'],['produce','Cauliflower','Cauliflower','🥦'],['produce','Jackfruit','Jackfruit','🍈'],
+  ['produce','Kiwifruit','Kiwi','🥝'],['produce','Peach','Peach','🍑'],['produce','Pear','Pear','🍐'],
+  // everyday things
+  ['things','Umbrella','Umbrella','☂️'],['things','Spoon','Spoon','🥄'],['things','Fork','Fork','🍴'],
+  ['things','Scissors','Scissors','✂️'],['things','Key (lock)','Key','🔑'],['things','Wristwatch','Wristwatch','⌚'],
+  ['things','Glasses','Glasses','👓'],['things','Toothbrush','Toothbrush','🪥'],['things','Comb','Comb','🪮'],
+  ['things','Broom','Broom','🧹'],['things','Bucket','Bucket','🪣'],['things','Mirror','Mirror','🪞'],
+  ['things','Pillow','Pillow','🛏️'],['things','Chair','Chair','🪑'],['things','Incandescent light bulb','Light bulb','💡'],
+  ['things','Candle','Candle','🕯️'],['things','Backpack','Backpack','🎒'],['things','Wallet','Wallet','👛'],
+  ['things','Mobile phone','Mobile phone','📱'],['things','Headphones','Headphones','🎧'],['things','Camera','Camera','📷'],
+  ['things','Television','Television','📺'],['things','Ceiling fan','Ceiling fan','🌀'],['things','Clothes iron','Iron box','👕'],
+  ['things','Padlock','Padlock','🔒'],['things','Ladder','Ladder','🪜'],['things','Hammer','Hammer','🔨'],
+  ['things','Screwdriver','Screwdriver','🪛'],['things','Pencil','Pencil','✏️'],['things','Book','Book','📖'],
+  ['things','Cricket bat','Cricket bat','🏏'],['things','Kite','Kite','🪁'],['things','Balloon','Balloon','🎈'],
+  ['things','Guitar','Guitar','🎸'],['things','Teapot','Teapot','🫖'],['things','Flip-flops','Slippers','🩴'],
+  ['things','Shoe','Shoe','👟'],['things','Hat','Hat','🎩'],['things','Sunglasses','Sunglasses','🕶️'],
+  ['things','Soap','Soap','🧼'],['things','Pressure cooker','Pressure cooker','♨️'],['things','Refrigerator','Fridge','🧊'],
+  ['things','Washing machine','Washing machine','🧺'],['things','Calculator','Calculator','🧮'],['things','Couch','Sofa','🛋️'],
+  ['things','Door','Door','🚪'],['things','Mug','Mug','☕'],['things','Laptop','Laptop','💻'],
+  // vehicles
+  ['vehicles','Bicycle','Bicycle','🚲'],['vehicles','Auto rickshaw','Auto rickshaw','🛺'],['vehicles','Bus','Bus','🚌'],
+  ['vehicles','Train','Train','🚆'],['vehicles','Airplane','Aeroplane','✈️'],['vehicles','Helicopter','Helicopter','🚁'],
+  ['vehicles','Motorcycle','Motorcycle','🏍️'],['vehicles','Car','Car','🚗'],['vehicles','Truck','Truck','🚚'],
+  ['vehicles','Ship','Ship','🚢'],['vehicles','Tractor','Tractor','🚜'],['vehicles','Ambulance','Ambulance','🚑'],
+  ['vehicles','Motor scooter','Scooter','🛵'],['vehicles','Hot air balloon','Hot air balloon','🎈'],
+  ['vehicles','Fire engine','Fire engine','🚒'],['vehicles','Sailboat','Sailboat','⛵'],['vehicles','Taxi','Taxi','🚕']
+];
+
+/* "Similar" groups: used to pick the imposter's different-but-close picture
+   (mango → orange, lion → tiger, spoon → fork …). Uses Wikipedia titles from ITEMS. */
+const GROUPS = [
+  ['Lion','Tiger'],['Dog','Cat','Rabbit'],['Cattle','Goat','Sheep','Pig','Horse','Camel'],
+  ['Elephant','Rhinoceros','Hippopotamus'],['Giraffe','Zebra','Deer','Horse'],['Monkey','Gorilla'],
+  ['Brown bear','Giant panda'],['Dolphin','Blue whale'],['Octopus','Crab'],
+  ['Snake','Crocodile','Turtle','Frog'],['Butterfly','Honey bee'],['Red fox','Dog'],
+  ['Parrot','Toucan','Great hornbill','Indian peafowl'],['Eagle','Owl'],
+  ['Duck','Swan','Pelican','Flamingo','Stork'],['Chicken','Turkey (bird)','Ostrich'],
+  ['House crow','House sparrow','Rock dove','Common kingfisher','Hummingbird','Woodpecker','Gull'],
+  ['Dosa','Idli','Chapati','Pancake'],['Pizza','Hamburger','Sandwich','Hot dog','Taco','French fries'],
+  ['Cake','Doughnut','Chocolate chip cookie','Ice cream','Chocolate bar'],['Gulab jamun','Jalebi'],
+  ['Pasta','Noodle','Sushi'],['Biryani','Samosa','Vada pav'],['Coffee','Masala chai','Milkshake'],
+  ['Bread','Sandwich','Chapati'],['Cheese','Fried egg'],
+  ['Mango','Papaya','Guava','Jackfruit','Pineapple','Coconut'],
+  ['Mango','Orange (fruit)','Lemon','Apple','Peach','Pear','Pomegranate','Kiwifruit'],
+  ['Strawberry','Cherry','Grape'],['Watermelon','Pumpkin'],['Tomato','Potato','Onion','Garlic'],
+  ['Carrot','Cucumber','Eggplant','Chili pepper'],['Broccoli','Cauliflower'],['Maize','Cucumber'],
+  ['Spoon','Fork'],['Glasses','Sunglasses'],['Shoe','Flip-flops','Hat'],['Hammer','Screwdriver','Ladder'],
+  ['Pencil','Book','Calculator'],['Candle','Incandescent light bulb'],['Pillow','Couch','Chair'],
+  ['Mobile phone','Laptop','Television','Camera','Headphones'],['Mug','Teapot'],['Bucket','Broom','Soap'],
+  ['Wristwatch','Wallet','Key (lock)','Padlock'],['Refrigerator','Washing machine','Pressure cooker','Clothes iron'],
+  ['Kite','Balloon'],['Guitar','Cricket bat'],['Scissors','Comb','Toothbrush'],['Door','Mirror','Ceiling fan'],
+  ['Backpack','Umbrella'],
+  ['Bicycle','Motorcycle','Motor scooter','Auto rickshaw'],['Bus','Truck','Tractor','Train'],
+  ['Car','Taxi','Ambulance','Fire engine'],['Airplane','Helicopter','Hot air balloon'],['Ship','Sailboat']
+];
+
+/* ------------------------------------------------------------------
+   STATE (memory only – nothing is saved anywhere)
+------------------------------------------------------------------- */
+const state = {
+  screen: 'setup',
+  theme: matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark',
+  count: 6,
+  names: Array(8).fill(''),
+  cats: new Set(Object.keys(CATS)),
+  impMode: 'clue',      // 'clue' | 'image'
+  hint: false,          // clue mode: also show first letter
+  tell: false,          // image mode: tell them they're the imposter
+  used: new Set(),
+  token: 0,
+  round: null
+};
+
+const $app = document.getElementById('app');
+const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const key = it => it[0] + '|' + it[1];
+const nameOf = i => state.names[i].trim() || ('Player ' + (i + 1));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dot = i => `<i style="background:${COLORS[i]}"></i>`;
+
+function applyTheme() {
+  document.documentElement.dataset.theme = state.theme;
+  document.getElementById('metaTheme').content = state.theme === 'dark' ? '#0A1048' : '#E2E8FF';
+  document.querySelectorAll('.theme').forEach(b => b.setAttribute('aria-checked', String(state.theme === 'dark')));
+}
+
+/* ------------------------------------------------------------------
+   PICTURES – Wikipedia summary API (free, CORS-enabled, no key)
+------------------------------------------------------------------- */
+function preload(url) {
+  return new Promise(res => {
+    const img = new Image();
+    const timer = setTimeout(() => res(false), 9000);
+    img.onload = () => { clearTimeout(timer); res(true); };
+    img.onerror = () => { clearTimeout(timer); res(false); };
+    img.src = url;
+  });
+}
+
+async function fetchImage(title) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' +
+      encodeURIComponent(title.replace(/ /g, '_')), { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d.type === 'disambiguation' || !d.thumbnail) return null;
+    if (d.originalimage && /\.svg$/i.test(d.originalimage.source || '')) return null;
+    const { width: w, height: h, source } = d.thumbnail;
+    if (w && h) { const ratio = w / h; if (ratio < 0.5 || ratio > 2.4) return null; }
+    const tries = [];
+    if (d.originalimage && d.originalimage.width > 520 && /\/\d+px-/.test(source)) {
+      tries.push(source.replace(/\/\d+px-/, '/500px-'));
+    }
+    tries.push(source);
+    for (const u of tries) if (await preload(u)) return u;
+    return null;
+  } catch (e) { return null; }
+}
+
+function nextItem() {
+  const enabled = [...state.cats];
+  const free = c => ITEMS.filter(it => it[0] === c && !state.used.has(key(it)));
+  let avail = enabled.filter(c => free(c).length);
+  if (!avail.length) {
+    ITEMS.forEach(it => { if (state.cats.has(it[0])) state.used.delete(key(it)); });
+    avail = enabled;
+  }
+  const it = rand(free(rand(avail)));
+  state.used.add(key(it));
+  return it;
+}
+
+async function pickPicture() {
+  let last = null;
+  for (let i = 0; i < 6; i++) {
+    const it = nextItem();
+    last = it;
+    const url = await fetchImage(it[1]);
+    if (url) return { item: it, url };
+  }
+  return { item: last, url: null };
+}
+
+/* The imposter's different picture: prefer a close cousin (mango → orange),
+   then anything else in the same category. */
+async function pickDecoy(main) {
+  const title = main.item[1];
+  const near = new Set();
+  GROUPS.forEach(g => { if (g.includes(title)) g.forEach(t => { if (t !== title) near.add(t); }); });
+  const others = ITEMS.filter(it => it[0] === main.item[0] && it[1] !== title);
+  const similar = others.filter(it => near.has(it[1]));
+  const order = [
+    ...shuffle(similar.filter(it => !state.used.has(key(it)))),
+    ...shuffle(similar.filter(it => state.used.has(key(it)))),
+    ...shuffle(others.filter(it => !near.has(it[1])))
+  ];
+  if (!main.url) return { item: order[0], url: null };      // offline → emoji cards
+  for (const it of order.slice(0, 5)) {
+    const url = await fetchImage(it[1]);
+    if (url) { state.used.add(key(it)); return { item: it, url }; }
+  }
+  return null;                                               // fall back to a clue
+}
+
+/* ------------------------------------------------------------------
+   GAME FLOW
+------------------------------------------------------------------- */
+async function keepAwake() {
+  try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+
+async function startRound() {
+  const token = ++state.token;
+  state.screen = 'loading';
+  render();
+  const main = await pickPicture();
+  if (token !== state.token) return;
+  let decoy = null;
+  if (state.impMode === 'image') {
+    decoy = await pickDecoy(main);
+    if (token !== state.token) return;
+  }
+  state.round = {
+    item: main.item, url: main.url, decoy,
+    tell: state.tell,
+    impostor: Math.floor(Math.random() * state.count),
+    starter: Math.floor(Math.random() * state.count),
+    idx: 0, seen: false,
+    votes: [], voteIdx: 0, pick: null,
+    candidates: [...Array(state.count).keys()],
+    revoted: false, tally: null
+  };
+  keepAwake();
+  go('pass');
+}
+
+function go(screen) { state.screen = screen; render(); window.scrollTo(0, 0); }
+
+function computeTally() {
+  const r = state.round;
+  const counts = Array(state.count).fill(0);
+  r.votes.forEach(v => counts[v]++);
+  const max = Math.max(...counts);
+  const top = counts.map((c, i) => c === max ? i : -1).filter(i => i >= 0);
+  r.tally = { counts, max, top, tied: top.length > 1 };
+  go('tally');
+}
+
+/* ------------------------------------------------------------------
+   VIEWS
+------------------------------------------------------------------- */
+const SUN = `<svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+const MOON = `<svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3a6.8 6.8 0 0 0 10.2 10.2z"/></svg>`;
+
+const bar = (game = true) => `<div class="bar">
+  ${game ? `<div class="bl"><button class="pill" data-act="quit">Quit</button><button class="pill" data-act="restart">New round</button></div>` : '<span></span>'}
+  <button class="theme" data-act="theme" role="switch" aria-checked="${state.theme === 'dark'}" aria-label="Dark mode">
+    <span class="thumb"></span>${SUN}${MOON}
+  </button></div>`;
+
+const dots = i => `<div class="dots" aria-hidden="true">${
+  Array.from({ length: state.count }, (_, k) => `<b class="${k < i ? 'done' : k === i ? 'now' : ''}"></b>`).join('')}</div>`;
+
+const picBlock = (url, name, emoji) => url
+  ? `<div class="pic"><img src="${esc(url)}" alt="${esc(name)}" draggable="false"></div>`
+  : `<div class="pic emoji">${emoji}</div>`;
+
+function vSetup() {
+  const chips = Object.entries(CATS).map(([k, c]) =>
+    `<button class="chip ${state.cats.has(k) ? 'on' : ''}" data-act="topic" data-key="${k}" aria-pressed="${state.cats.has(k)}"><span aria-hidden="true">${c.emoji}</span>${c.label}</button>`).join('');
+  const names = Array.from({ length: state.count }, (_, i) =>
+    `<label class="pname">${dot(i)}<input data-name="${i}" maxlength="14" placeholder="Player ${i + 1}" value="${esc(state.names[i])}" autocomplete="off" aria-label="Name of player ${i + 1}"></label>`).join('');
+  const img = state.impMode === 'image';
+  return `${bar(false)}<main class="screen" style="padding-top:0">
+    <header>
+      <h1>Imposter</h1>
+      <p class="lede">Everyone sees the same picture, except one player. Find who is bluffing.</p>
+    </header>
+    <section class="panel">
+      <div class="row"><h2>Players</h2>
+        <div class="stepper"><button data-act="dec" aria-label="Fewer players">−</button><output aria-live="polite">${state.count}</output><button data-act="inc" aria-label="More players">+</button></div>
+      </div>
+      <div class="names">${names}</div>
+    </section>
+    <section class="panel"><h2>Pictures from</h2><div class="chips">${chips}</div></section>
+    <section class="panel">
+      <h2>Imposter gets</h2>
+      <div class="seg" role="radiogroup" aria-label="What the imposter gets">
+        <button role="radio" aria-checked="${!img}" data-act="mode" data-mode="clue">A clue</button>
+        <button role="radio" aria-checked="${img}" data-act="mode" data-mode="image">A different picture</button>
+      </div>
+      <p class="desc">${img
+        ? 'A similar picture, like an orange when everyone else has a mango.'
+        : 'Only a hint about the picture, like “an animal”.'}</p>
+      ${img
+        ? `<button class="switch" data-act="tell" role="switch" aria-checked="${state.tell}"><span class="track"><span class="knob"></span></span><span>Tell them they're the imposter</span></button>`
+        : `<button class="switch" data-act="hint" role="switch" aria-checked="${state.hint}"><span class="track"><span class="knob"></span></span><span>Also show the first letter</span></button>`}
+    </section>
+    <div class="dock">
+      <button class="btn primary" data-act="deal">Deal the cards</button>
+      <p class="foot">Pictures load from Wikipedia, so keep your internet on.</p>
+    </div>
+  </main>`;
+}
+
+function vLoading() {
+  return `${bar(false)}<main class="screen center"><div class="spin" role="status" aria-label="Loading"></div>
+    <p class="say">${state.impMode === 'image' ? 'Picking two pictures…' : 'Picking a picture…'}</p></main>`;
+}
+
+function vPass() {
+  const i = state.round.idx;
+  return `${bar()}<main class="screen center">
+    ${dots(i)}
+    <p class="say">Pass the phone to</p>
+    <h2 class="bigname">${dot(i)}${esc(nameOf(i))}</h2>
+    <p class="small">Make sure nobody else can see the screen.</p>
+    <div class="grow"></div>
+    <button class="btn primary" data-act="ready">I'm ${esc(nameOf(i))}</button>
+  </main>`;
+}
+
+function vCard() {
+  const r = state.round, i = r.idx;
+  const isImp = i === r.impostor;
+  const last = i === state.count - 1;
+  let face;
+  if (isImp && !r.decoy) {
+    const [cat, , name] = r.item;
+    face = `<div class="face imp">
+      <h3>You're the imposter</h3>
+      <p>The others are looking at</p>
+      <div class="clue">${CATS[cat].clue}</div>
+      ${state.hint ? `<p>It starts with <b>${esc(name[0].toUpperCase())}</b></p>` : ''}
+      <p style="font-size:15px;opacity:.9">Blend in. Don't get caught.</p>
+    </div>`;
+  } else {
+    const P = isImp ? r.decoy : { item: r.item, url: r.url };
+    const [, , name, emoji] = P.item;
+    face = `<div class="face">
+      ${isImp && r.tell ? `<div class="tag">You're the imposter</div>` : ''}
+      ${picBlock(P.url, name, emoji)}
+      <div class="plate">${esc(name)}</div>
+    </div>`;
+  }
+  return `${bar()}<main class="screen" style="gap:10px">
+    <div class="card-wrap">
+      <div class="card" tabindex="0" role="button" aria-label="Hold to reveal your card">
+        <div class="back"><div class="q">?</div><div class="t">${esc(nameOf(i))}</div></div>
+        ${face}
+      </div>
+    </div>
+    <p class="hold">Press and hold the card to look. Let go to hide it.</p>
+    <button class="btn primary" data-act="next" disabled>${last ? 'Done. Who starts?' : 'Pass to ' + esc(nameOf(i + 1))}</button>
+  </main>`;
+}
+
+function vStarter() {
+  const r = state.round;
+  const order = Array.from({ length: state.count }, (_, k) => (r.starter + k) % state.count);
+  return `${bar()}<main class="screen center" style="gap:18px">
+    <p class="say">First to speak</p>
+    <div class="roul" id="roul" aria-live="polite">&nbsp;</div>
+    <div class="after" id="after">
+      <p class="prompt">Go around the table. Say one word about the picture, without giving it away. The imposter is listening.</p>
+      <ol class="order">${order.map((p, k) => `<li><i style="background:${COLORS[p]}">${k + 1}</i>${esc(nameOf(p))}</li>`).join('')}</ol>
+      <button class="btn primary" data-act="startvote">Start voting</button>
+    </div>
+  </main>`;
+}
+
+function vVotePass() {
+  const r = state.round, v = r.voteIdx;
+  return `${bar()}<main class="screen center">
+    ${dots(v)}
+    <p class="say">${r.revoted ? 'Tie-break vote. Pass the phone to' : 'Voting time. Pass the phone to'}</p>
+    <h2 class="bigname">${dot(v)}${esc(nameOf(v))}</h2>
+    <p class="small">Votes are secret until everyone has voted.</p>
+    <div class="grow"></div>
+    <button class="btn primary" data-act="voteready">I'm ${esc(nameOf(v))}</button>
+  </main>`;
+}
+
+function vVote() {
+  const r = state.round, v = r.voteIdx;
+  const list = r.candidates.filter(c => c !== v).map(c =>
+    `<button class="vote ${r.pick === c ? 'sel' : ''}" data-act="pick" data-i="${c}" aria-pressed="${r.pick === c}">${dot(c)}${esc(nameOf(c))}</button>`).join('');
+  return `${bar()}<main class="screen">
+    <div class="vote-head">
+      <h2>${esc(nameOf(v))}, who is the imposter?</h2>
+      <p>${r.revoted ? 'Only the tied players are on this ballot.' : 'Tap a name, then lock in your vote.'}</p>
+    </div>
+    <div class="votes">${list}</div>
+    <div class="grow"></div>
+    <button class="btn primary" data-act="lock" ${r.pick === null ? 'disabled' : ''}>Lock in vote</button>
+  </main>`;
+}
+
+function vTally() {
+  const r = state.round, t = r.tally;
+  const rows = r.candidates.slice().sort((a, b) => t.counts[b] - t.counts[a]).map(c => `
+    <div class="t-row ${t.top.includes(c) ? 'top' : ''}">
+      <div class="who">${dot(c)}${esc(nameOf(c))}</div><div class="n">${t.counts[c]}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${t.max ? Math.round(t.counts[c] / t.max * 100) : 0}%"></div></div>
+    </div>`).join('');
+  const headline = t.tied ? "It's a tie" : `${esc(nameOf(t.top[0]))} got the most votes`;
+  const tiedNames = t.top.map(nameOf).map(esc).join(' and ');
+  const sub = t.tied
+    ? `${tiedNames} each got ${t.max} vote${t.max > 1 ? 's' : ''}.`
+    : `${t.max} of ${state.count} votes.`;
+  const btn = t.tied && !r.revoted
+    ? `<button class="btn primary" data-act="revote">Vote again</button>`
+    : `<button class="btn primary" data-act="reveal">Reveal the imposter</button>`;
+  return `${bar()}<main class="screen">
+    <div class="vote-head"><h2>${headline}</h2><p>${sub}</p></div>
+    <section class="panel"><div class="tally">${rows}</div></section>
+    <div class="grow"></div>
+    ${btn}
+  </main>`;
+}
+
+function vFinal() {
+  const r = state.round, t = r.tally, imp = r.impostor;
+  const caught = !t.tied && t.top[0] === imp;
+  let verdict, sub;
+  if (caught) {
+    verdict = `<h2 class="verdict win">Crew wins</h2>`;
+    sub = `They caught <span class="who-imp">${dot(imp)}${esc(nameOf(imp))}</span>, the imposter.`;
+  } else if (t.tied) {
+    verdict = `<h2 class="verdict lose">Imposter wins</h2>`;
+    sub = `The vote ended in a tie, so <span class="who-imp">${dot(imp)}${esc(nameOf(imp))}</span> slipped away.`;
+  } else {
+    verdict = `<h2 class="verdict lose">Imposter wins</h2>`;
+    sub = `The crew voted out ${esc(nameOf(t.top[0]))}, but the imposter was <span class="who-imp">${dot(imp)}${esc(nameOf(imp))}</span>.`;
+  }
+  const fig = (it, url, cap) => {
+    const [, , nm, em] = it;
+    return `<figure class="fig"><div class="card small open" aria-label="${esc(cap)}: ${esc(nm)}">
+      <div class="face">${picBlock(url, nm, em).replace('class="pic emoji"', 'class="pic emoji" style="font-size:80px"')}<div class="plate">${esc(nm)}</div></div>
+    </div><figcaption>${cap}</figcaption></figure>`;
+  };
+  const cards = r.decoy
+    ? fig(r.item, r.url, "Everyone else's picture") + fig(r.decoy.item, r.decoy.url, "Imposter's picture")
+    : fig(r.item, r.url, 'The picture');
+  return `${bar(false)}<main class="screen" style="padding-top:14px;gap:16px">
+    <div>${verdict}<p class="result-sub">${sub}</p></div>
+    <div class="card-wrap ${r.decoy ? 'duo' : ''}">${cards}</div>
+    ${caught ? `<p class="note">The imposter gets one guess at the crew's picture. A correct guess steals the win.</p>` : ''}
+    <div class="stack">
+      <button class="btn primary" data-act="again">Play again</button>
+      <button class="btn quiet" data-act="home">Change players</button>
+    </div>
+  </main>`;
+}
+
+/* ------------------------------------------------------------------
+   RENDER + INTERACTION
+------------------------------------------------------------------- */
+function render() {
+  const views = { setup:vSetup, loading:vLoading, pass:vPass, card:vCard, starter:vStarter,
+                  votepass:vVotePass, vote:vVote, tally:vTally, final:vFinal };
+  $app.innerHTML = views[state.screen]();
+  if (state.screen === 'card') bindCard();
+  if (state.screen === 'starter') runRoulette();
+}
+
+function bindCard() {
+  const card = $app.querySelector('.card');
+  const nextBtn = $app.querySelector('[data-act="next"]');
+  const r = state.round;
+  const open = e => {
+    if (e.type === 'keydown' && e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    if (e.pointerId !== undefined) { try { card.setPointerCapture(e.pointerId); } catch (_) {} }
+    card.classList.add('open');
+    r.seen = true;
+  };
+  const close = () => {
+    card.classList.remove('open');
+    if (r.seen) nextBtn.disabled = false;
+  };
+  card.addEventListener('pointerdown', open);
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => card.addEventListener(ev, close));
+  card.addEventListener('keydown', open);
+  card.addEventListener('keyup', close);
+  card.addEventListener('blur', close);
+  card.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function runRoulette() {
+  const el = document.getElementById('roul');
+  const after = document.getElementById('after');
+  const r = state.round;
+  const finish = () => {
+    el.textContent = nameOf(r.starter);
+    el.classList.add('landed');
+    after.classList.add('show');
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return finish();
+  const t0 = Date.now();
+  let i = Math.floor(Math.random() * state.count);
+  (function tick() {
+    if (state.screen !== 'starter') return;
+    const elapsed = Date.now() - t0;
+    if (elapsed > 1700) return finish();
+    el.textContent = nameOf(i++ % state.count);
+    setTimeout(tick, 60 + elapsed / 10);
+  })();
+}
+
+// hide an open card if the page goes to the background
+document.addEventListener('visibilitychange', () => {
+  const c = document.querySelector('.card.open:not(.small)');
+  if (document.hidden && c) c.classList.remove('open');
+  if (!document.hidden && state.screen !== 'setup') keepAwake();
+});
+
+$app.addEventListener('input', e => {
+  const i = e.target.dataset && e.target.dataset.name;
+  if (i !== undefined) state.names[+i] = e.target.value;
+});
+
+$app.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const r = state.round;
+  switch (b.dataset.act) {
+    case 'theme':
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(); break;
+    case 'dec': if (state.count > 3) { state.count--; render(); } break;
+    case 'inc': if (state.count < 8) { state.count++; render(); } break;
+    case 'topic': {
+      const k = b.dataset.key;
+      if (state.cats.has(k)) { if (state.cats.size > 1) state.cats.delete(k); }
+      else state.cats.add(k);
+      render(); break;
+    }
+    case 'mode': state.impMode = b.dataset.mode; render(); break;
+    case 'hint': state.hint = !state.hint; render(); break;
+    case 'tell': state.tell = !state.tell; render(); break;
+    case 'deal': case 'again': startRound(); break;
+    case 'quit':
+      if (confirm('Quit this game and go back to the start?')) { state.token++; go('setup'); }
+      break;
+    case 'restart':
+      if (confirm('Start a new round with a new picture?')) startRound();
+      break;
+    case 'ready': r.seen = false; go('card'); break;
+    case 'next':
+      r.idx++;
+      if (r.idx < state.count) go('pass'); else go('starter');
+      break;
+    case 'startvote': r.voteIdx = 0; r.votes = []; r.pick = null; go('votepass'); break;
+    case 'voteready': r.pick = null; go('vote'); break;
+    case 'pick': r.pick = +b.dataset.i; render(); break;
+    case 'lock':
+      if (r.pick === null) break;
+      r.votes[r.voteIdx] = r.pick;
+      r.pick = null;
+      r.voteIdx++;
+      if (r.voteIdx < state.count) go('votepass'); else computeTally();
+      break;
+    case 'revote':
+      r.candidates = r.tally.top.slice();
+      r.votes = []; r.voteIdx = 0; r.pick = null; r.revoted = true;
+      go('votepass'); break;
+    case 'reveal': go('final'); break;
+    case 'home': go('setup'); break;
+  }
+});
+
+applyTheme();
+render();
+})();
+</script>
+</body>
+</html>
